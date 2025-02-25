@@ -17,8 +17,8 @@ import torch.nn.functional as F
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
 from src.utils.test_unet import test_unet
-
 from src.nnArchitecture.optimization_nets.improve_components.AxialAttention import AxialAttention3D
+from src.nnArchitecture.optimization_nets.improve_components.InceptionBlock import Inception_Block
 
 def init_weights_3d(m):
     """Initialize 3D卷积和BN层的权重"""
@@ -103,7 +103,7 @@ class AttentionUNet3D(nn.Module):
         self.Conv3 = DoubleConv3D(f_list[1], f_list[2])
         self.Conv4 = DoubleConv3D(f_list[2], f_list[3])
         
-        self.bottleneck = DoubleConv3D(f_list[3], f_list[3])
+        self.bottleneck = Inception_Block(f_list[3], f_list[3])
         
         self.Up5 = UpSample(f_list[3], f_list[3], trilinear)
         self.Att5 = AttentionBlock3D(F_g=f_list[3], F_l=f_list[3], F_int=f_list[3]//2)

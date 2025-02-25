@@ -8,6 +8,8 @@
 *      FEATURES: 
 =================================================
 '''
+#! 当前模块会出现梯度消失问题，需要进一步优化
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

@@ -8,42 +8,47 @@
 *      FEATURES: 
 =================================================
 '''
+#! 当前模块存在 验证指标不稳定的问题
+
 import time 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from thop import profile
 
-
 class DenseASPP3D(nn.Module):
     def __init__(self, in_channels, out_channels, reduce_rate=4, dilations=[1, 2, 5, 7]):
         super(DenseASPP3D, self).__init__()
         self.aspp1 = nn.Sequential(
             nn.Conv3d(in_channels, out_channels//reduce_rate, kernel_size=3, padding=dilations[0], dilation=dilations[0]),
-            nn.BatchNorm3d(out_channels//reduce_rate),
-            nn.ReLU(inplace=True)
+            nn.GroupNorm(4, out_channels//reduce_rate),
+            nn.Dropout3d(0.1)
         )
         self.aspp2 = nn.Sequential(
             nn.Conv3d(in_channels + out_channels//reduce_rate, out_channels//reduce_rate, kernel_size=3, padding=dilations[1], dilation=dilations[1]),
-            nn.BatchNorm3d(out_channels//reduce_rate),
-            nn.ReLU(inplace=True)
+            nn.GroupNorm(4, out_channels//reduce_rate),
+            nn.Dropout3d(0.1)
         )
         self.aspp3 = nn.Sequential(
             nn.Conv3d(in_channels + 2*(out_channels//reduce_rate), out_channels//reduce_rate, kernel_size=3, padding=dilations[2], dilation=dilations[2]),
-            nn.BatchNorm3d(out_channels//reduce_rate),
-            nn.ReLU(inplace=True)
+            nn.GroupNorm(4, out_channels//reduce_rate),
+            nn.Dropout3d(0.1)
         )
         self.aspp4 = nn.Sequential(
             nn.Conv3d(in_channels + 3*(out_channels//reduce_rate), out_channels//reduce_rate, kernel_size=3, padding=dilations[3], dilation=dilations[3]),
-            nn.BatchNorm3d(out_channels//reduce_rate),
-            nn.ReLU(inplace=True)
+            nn.GroupNorm(4, out_channels//reduce_rate),
+            nn.Dropout3d(0.1)
         )
         self.global_avg = nn.Sequential(
             nn.AdaptiveAvgPool3d(1),
             nn.Conv3d(in_channels, out_channels//reduce_rate, kernel_size=1),
-            nn.ReLU(inplace=True)
+            nn.GroupNorm(4, out_channels//reduce_rate)
         ) 
-        self.fusion = nn.Conv3d(5*(out_channels//reduce_rate), out_channels, 1)
+        self.fusion = nn.Sequential(
+            nn.Conv3d(5*(out_channels//reduce_rate), out_channels, 1),
+            nn.GroupNorm(8, out_channels),
+        )
+        self.act = nn.ReLU(inplace=True)
         # self.conv1x1 = nn.Conv3d(in_channels, out_channels, 1)
         
     def forward(self, x):
@@ -54,8 +59,9 @@ class DenseASPP3D(nn.Module):
         x5 = self.global_avg(x)
         x5 = F.interpolate(x5, size=x4.size()[2:], mode='trilinear', align_corners=True)
         fusion_x = torch.cat([x1, x2, x3, x4, x5], 1)
-        x = self.fusion(fusion_x)
-        return x
+        out = self.fusion(fusion_x)
+        out = self.act(out)
+        return out
     
 
 def test_DenseASPP3D():

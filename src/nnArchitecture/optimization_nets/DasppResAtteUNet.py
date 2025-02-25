@@ -41,10 +41,10 @@ class ResConv3D(nn.Module):
         super().__init__()
         self.conv = nn.Sequential(
             nn.Conv3d(in_channels, out_channels, kernel_size=3, padding=1),
-            nn.BatchNorm3d(out_channels),
+            nn.InstanceNorm3d(out_channels),
             nn.ReLU(inplace=True),
             nn.Conv3d(out_channels, out_channels, kernel_size=3, padding=1),
-            nn.BatchNorm3d(out_channels),
+            nn.InstanceNorm3d(out_channels),
         )
         self.shortcut = nn.Conv3d(in_channels, out_channels, kernel_size=1) if in_channels != out_channels else None
         self.relu = nn.ReLU(inplace=True)
@@ -65,17 +65,17 @@ class AttentionBlock3D(nn.Module):
         super(AttentionBlock3D, self).__init__()
         self.W_g = nn.Sequential(
             nn.Conv3d(F_g, F_int, kernel_size=1, stride=1, padding=0, bias=True),
-            nn.BatchNorm3d(F_int)
+            nn.InstanceNorm3d(F_int)
         )
         
         self.W_x = nn.Sequential(
             nn.Conv3d(F_l, F_int, kernel_size=1, stride=1, padding=0, bias=True),
-            nn.BatchNorm3d(F_int)
+            nn.InstanceNorm3d(F_int)
         )
         
         self.psi = nn.Sequential(
             nn.Conv3d(F_int, 1, kernel_size=1, stride=1, padding=0, bias=True),
-            nn.BatchNorm3d(1),
+            nn.InstanceNorm3d(1),
             nn.Sigmoid()
         )
         

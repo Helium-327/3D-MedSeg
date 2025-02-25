@@ -8,6 +8,7 @@
 *      FEATURES: UNet3D 复现网络
 =================================================
 '''
+#! ⚠️ 注意：为了能够与权重进行匹配，最好不要改变网络结构
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -21,47 +22,17 @@ from src.utils.test_unet import test_unet
 
 def init_weights_3d(m):
     """Initialize 3D卷积和BN层的权重"""
-    if isinstance(m, (nn.Conv3d, nn.ConvTranspose3d)):
-        nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='leaky_relu')
+    if isinstance(m, nn.Conv3d):
+        nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
         if m.bias is not None:
             nn.init.constant_(m.bias, 0)
     elif isinstance(m, nn.BatchNorm3d):
         nn.init.constant_(m.weight, 1)
         nn.init.constant_(m.bias, 0)
-
-class DepthwiseSeparbleConv3D(nn.Module):
-    """3D Depthwise Separable Convolution (Fixed)"""
-    def __init__(self, in_channels, out_channels):
-        super().__init__()
-        self.depthwise = nn.Sequential(
-            nn.Conv3d(in_channels, in_channels, kernel_size=3, padding=1, groups=in_channels),
-            nn.InstanceNorm3d(in_channels),
-            nn.LeakyReLU(inplace=True)
-        )
-        self.pointwise = nn.Conv3d(in_channels, out_channels, kernel_size=1)
-
-    def forward(self, x):
-        x = self.depthwise(x)
-        x = self.pointwise(x)  # 确保执行逐点卷积
-        return x
-
-
-
-class DWConvBlock3D(nn.Module):
-    """(DepthwiseSeparbleConv3D -> BN -> LeakyReLU) * 2"""
-    def __init__(self, in_channels, out_channels):
-        super(DWConvBlock3D, self).__init__()
-        self.dw_conv = nn.Sequential(
-            nn.Conv3d(in_channels, out_channels, kernel_size=3, padding=1),
-            nn.InstanceNorm3d(out_channels),
-            nn.LeakyReLU(inplace=True),
-            DepthwiseSeparbleConv3D(out_channels, out_channels, padding=1),
-            # DepthwiseSeparbleConv3D(out_channels, out_channels, padding=2, dilation=2),
-            # DepthwiseSeparbleConv3D(out_channels, out_channels, padding=3, dilation=3),
-        )
-        self.conv1x1 = nn.Conv3d(in_channels, out_channels, kernel_size=1)
-    def forward(self, x):
-        return F.leaky_relu(self.dw_conv(x) + self.conv1x1(x))
+    elif isinstance(m, nn.ConvTranspose3d):
+        nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+        if m.bias is not None:
+            nn.init.constant_(m.bias, 0)
 
 
 class DoubleConv3D(nn.Module):
@@ -70,11 +41,11 @@ class DoubleConv3D(nn.Module):
         super().__init__()
         self.double_conv = nn.Sequential(
             nn.Conv3d(in_channels, out_channels, kernel_size=3, padding=1),
-            nn.InstanceNorm3d(out_channels),
-            nn.LeakyReLU(inplace=True),
+            nn.BatchNorm3d(out_channels),
+            nn.ReLU(inplace=True),
             nn.Conv3d(out_channels, out_channels, kernel_size=3, padding=1),
-            nn.InstanceNorm3d(out_channels),
-            nn.LeakyReLU(inplace=True)
+            nn.BatchNorm3d(out_channels),
+            nn.ReLU(inplace=True)
         )
 
     def forward(self, x):
@@ -86,7 +57,7 @@ class Down3D(nn.Module):
         super().__init__()
         self.maxpool_conv = nn.Sequential(
             nn.MaxPool3d(2),
-            DWConvBlock3D(in_channels, out_channels)
+            DoubleConv3D(in_channels, out_channels)
         )
 
     def forward(self, x):
@@ -101,7 +72,7 @@ class Up3D(nn.Module):
         else:
             self.up = nn.ConvTranspose3d(in_channels // 2, in_channels // 2, kernel_size=2, stride=2)
         
-        self.conv = DWConvBlock3D(in_channels, out_channels)
+        self.conv = DoubleConv3D(in_channels, out_channels)
 
     def forward(self, x1, x2):
         x1 = self.up(x1)
@@ -121,7 +92,7 @@ class UNet3D(nn.Module):
         self.in_channels = in_channels
         self.out_channels = out_channels
 
-        self.inc = nn.Conv3d(in_channels, f_list[0], kernel_size=1)  # 4 --> 32
+        self.inc = DoubleConv3D(in_channels, f_list[0])  # 4 --> 32
         self.down1 = Down3D(f_list[0], f_list[1])        # 32 --> 64
         self.down2 = Down3D(f_list[1], f_list[2])        # 64 --> 128
         self.down3 = Down3D(f_list[2], f_list[3])        # 128 --> 256

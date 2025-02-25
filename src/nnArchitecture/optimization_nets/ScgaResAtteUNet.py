@@ -9,6 +9,8 @@
 *      FEATURES: Attention UNet3D + ResConv + DenseASPP + SCGA()
 =================================================
 '''
+
+
 import time
 
 import torch
@@ -20,7 +22,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
 from src.utils.test_unet import test_unet
-from src.nnArchitecture.optimization_nets.improve_components.SCGA import SCGA
+from src.nnArchitecture.optimization_nets.improve_components.scga import SCGA
 
 def init_weights_3d(m):
     """Initialize 3D卷积和BN层的权重"""
