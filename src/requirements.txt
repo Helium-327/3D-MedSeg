@@ -1,0 +1,11 @@
+tabulate
+nibabel
+torchio
+torchinfo
+thop
+monai
+batchgenerators
+timm
+einops
+mamba_ssm
+triton
