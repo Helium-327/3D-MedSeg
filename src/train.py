@@ -34,9 +34,13 @@ RANDOM_SEED = 42
 scheduler_start_epoch = 0
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-os.environ["CUDA_LAUNCH_BLOCKING"] = '1'
-torch.backends.cudnn.benchmark = True
-torch.backends.cudnn.deterministic = True
+# 加速
+torch.backends.cudnn.benchmark = True        #! 加速固定输入/网络结构的训练，但需避免动态变化场景，如数据增强
+torch.backends.cudnn.deterministic = True     #! 确保结果可复现，但可能降低性能并引发兼容性问题
+
+# 调试工具
+# os.environ["CUDA_LAUNCH_BLOCKING"] = '1'
+# torch.autograd.set_detect_anomaly(True)     #! 检测梯度异常，但会降低性能（谨慎使用，哥们）
 
 torch.manual_seed(RANDOM_SEED)
 torch.cuda.manual_seed(RANDOM_SEED)                 #让显卡产生的随机数一致

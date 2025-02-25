@@ -29,7 +29,7 @@ from torch.amp import autocast
 # from nets.unet3ds import UNet_3d_22M_32, UNet_3d_22M_64, UNet_3d_48M, UNet_3d_90M, init_weights_light, init_weights_pro
 # from metrics import EvaluationMetrics
 
-os.environ["CUDA_LAUNCH_BLOCKING"] = '1'
+# os.environ["CUDA_LAUNCH_BLOCKING"] = '1'
 best_val_loss = float('inf')
 start_epoch = 0
 

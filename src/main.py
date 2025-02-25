@@ -40,8 +40,8 @@ from nnArchitecture.ref_homo_nets.unetr import UNETR
 from nnArchitecture.ref_homo_nets.unetrpp import UNETR_PP
 from nnArchitecture.ref_homo_nets.segFormer3d import SegFormer3D
 
-from nnArchitecture.ref_hetero_nets.Mamba3d import Mamba3d
-from nnArchitecture.ref_hetero_nets.MogaNet import MogaNet
+# from nnArchitecture.ref_hetero_nets.Mamba3d import Mamba3d
+# from nnArchitecture.ref_hetero_nets.MogaNet import MogaNet
 
 from datasets.transforms import *
 from datasets.BraTS21 import BraTS21_3D
@@ -49,10 +49,12 @@ from lossFunc import *
 from metrics import *
 
 # 环境设置
-os.environ["CUDA_LAUNCH_BLOCKING"] = '1'
-torch.backends.cudnn.benchmark = True
-torch.backends.cudnn.deterministic = True
-torch.autograd.set_detect_anomaly(True)
+torch.backends.cudnn.benchmark = True        #! 加速固定输入/网络结构的训练，但需避免动态变化场景，如数据增强
+torch.backends.cudnn.deterministic = True     #! 确保结果可复现，但可能降低性能并引发兼容性问题
+
+# !调试工具(不会用就不用，不然会后悔的🧐， 哥们)
+# os.environ["CUDA_LAUNCH_BLOCKING"] = '1'
+# torch.autograd.set_detect_anomaly(True)     #! 检测梯度异常，但会降低性能（谨慎使用，哥们）
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 RANDOM_SEED = 42
@@ -345,7 +347,7 @@ if __name__ == '__main__':
     ## 定义全局参数
     parser = argparse.ArgumentParser(description='Train args')
     parser.add_argument('--config', type=str, 
-                        default='/root/workspace/BraTS_Solution/src/configs/1_aaunet.yaml', 
+                        default='/root/code/3D-MedSeg/src/configs/1_scga_unetyaml', 
                         help='Path to the configuration YAML file')
     # parser.add_argument('--resume', type=str, 
     #                     default=False, 
