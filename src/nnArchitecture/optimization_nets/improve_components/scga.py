@@ -17,7 +17,7 @@ from thop import profile
 #! 当前模块会出现梯度消失问题，需要进一步优化
 
 class SCGA(nn.Module):
-    def __init__(self, channels, factor=32):
+    def __init__(self, channels=32, factor=32):
         super(SCGA, self).__init__()
         self.group = factor
         assert channels // self.group > 0
