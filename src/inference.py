@@ -42,11 +42,13 @@ from metrics import *
 from utils.logger_tools import custom_logger, get_current_date, get_current_time
 from utils.ckpt_tools import load_checkpoint
 
-from nnArchitecture.my_unet.Improved_UNet3d import UNet3D
-from nnArchitecture.my_unet.AttentionUnet import AttentionUNet3D
-from nnArchitecture.my_unet.RA_Unet import RA_UNet
-from nnArchitecture.my_unet.DasppResAtteUNet import DasppResAtteUNet
-from nnArchitecture.my_unet.ScgaDasppResAtteUNet import ScgaDasppResAtteUNet
+from nnArchitecture.baselines.UNet3d import UNet3D
+from nnArchitecture.baselines.AttentionUNet import AttentionUNet3D
+
+from nnArchitecture.optimization_nets.DasppResAtteUNet import DasppResAtteUNet
+from nnArchitecture.optimization_nets.ScgaResAtteUNet import ScgaResAtteUNet
+from nnArchitecture.optimization_nets.ScgaDasppAttnUNet import ScgaDasppAttnUNet
+from nnArchitecture.optimization_nets.AA_UNet import AAUNet
 
 # from nnArchitecture.dw_unet3d import  DW_UNet3D
 
