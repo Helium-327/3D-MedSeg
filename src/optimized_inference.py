@@ -273,19 +273,6 @@ def slide_window_pred(inputs, model, roi_size=128, sw_batch_size=4, overlap=0.5,
     output_map /= count_map
     return output_map.cpu()
 
-# def load_optimized_model(
-#     model: Model,
-#     optimizer: torch.optim.Optimizer,
-#     scaler: torch.cuda.amp.GradScaler,
-#     ckpt_path: str
-# ) -> Tuple[Model, torch.optim.Optimizer, torch.cuda.amp.GradScaler]:
-    
-#     """加载优化后的模型权重"""
-#     checkpoint = torch.load(ckpt_path, map_location='cpu')
-#     model.load_state_dict(checkpoint['model_state_dict'])
-#     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-#     scaler.load_state_dict(checkpoint['scaler'])
-#     return model, optimizer, scaler
 
 def init_output_dir(output_root: str, model: Model, ckpt_path: str) -> Tuple[str, str]:
     """初始化输出目录结构"""
@@ -402,6 +389,11 @@ def default_affine() -> np.ndarray:
 if __name__ == '__main__':
     
     csv_file = '/root/workspace/VoxelMedix/data/raw/brats21_original/test.csv'
+    
+    out_dir = '/mnt/d/results'
+    if not os.path.exists(out_dir):
+        out_dir = '../../output'
+        
     model_names = ['UNet3D', 'AttentionUNet3D']
     test_df = pd.read_csv(csv_file)
     test_loader = load_data(csv_file)
@@ -409,15 +401,14 @@ if __name__ == '__main__':
     # optimizer = AdamW(model.parameters(), lr=0.0001, betas=(0.9, 0.99), weight_decay=0.00001)
     unet_model = load_model('UNet3D') 
     attention_unet_model = load_model('AttentionUNet3D')
-    
-        
-    
+    attention_unet_denseaspp_model = load_model('DasppResAtteUNet')
+    attention_unet_scga_model = load_model('ScgaResAtteUNet')
         
     # 初始化配置
     unet_config = {
         'test_df': test_df,
         'test_loader': test_loader,
-        'output_root': './output',
+        'output_root': out_dir,
         'model': unet_model,
         'metricer': EvaluationMetrics(),
         'scaler': GradScaler(),
@@ -427,15 +418,36 @@ if __name__ == '__main__':
     attention_unet_config = {
         'test_df': test_df,
         'test_loader': test_loader,
-        'output_root': './output',
+        'output_root': out_dir,
         'model': attention_unet_model,
         'metricer': EvaluationMetrics(),
         'scaler': GradScaler(),
         'optimizer': AdamW(attention_unet_model.parameters(), lr=0.0001, betas=(0.9, 0.99), weight_decay=0.00001),
         'ckpt_path': '/root/workspace/VoxelMedix/output/AttentionUNet3D_final_model.pth'
     }
-    
+    attention_unet_denseaspp_config = {
+        'test_df': test_df,
+        'test_loader': test_loader,
+        'output_root': out_dir,
+        'model': attention_unet_denseaspp_model,
+        'metricer': EvaluationMetrics(),
+        'scaler': GradScaler(),
+        'optimizer': AdamW(attention_unet_denseaspp_model.parameters(), lr=0.0001, betas=(0.9, 0.99), weight_decay=0.00001),
+        'ckpt_path': '/root/workspace/BraTS_Solution/results/DasppResAtteUNet_2025-02-25_18-24-52/checkpoints/best@e50_DasppResAtteUNet__diceloss0.1436_dice0.8567_2025-02-25_18-24-52_11.pth'
+    }
+    attention_unet_scga_config = {
+        'test_df': test_df,
+        'test_loader': test_loader,
+        'output_root': out_dir,
+        'model': attention_unet_scga_model,
+        'metricer': EvaluationMetrics(),
+        'scaler': GradScaler(),
+        'optimizer': AdamW(attention_unet_scga_model.parameters(), lr=0.0001, betas=(0.9, 0.99), weight_decay=0.00001),
+        'ckpt_path': '/root/workspace/BraTS_Solution/results/best@e53_ScgaResAtteUNet__diceloss0.1556_dice0.8447_2025-02-25_18-29-04_14.pth'
+    }
 
     # 执行推理
-    unet_results = inference(**unet_config)
-    attention_unet_results = inference(**attention_unet_config)
+    # unet_results = inference(**unet_config)
+    # attention_unet_results = inference(**attention_unet_config)
+    attention_unet_denseaspp_results = inference(**attention_unet_denseaspp_config)
+    # attention_unet_scga_results = inference(**attention_unet_scga_config)

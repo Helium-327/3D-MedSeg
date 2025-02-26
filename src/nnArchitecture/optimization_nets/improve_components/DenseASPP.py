@@ -17,7 +17,7 @@ import torch.nn.functional as F
 from thop import profile
 
 class DenseASPP3D(nn.Module):
-    def __init__(self, in_channels, out_channels, reduce_rate=4, dilations=[1, 2, 5, 7]):
+    def __init__(self, in_channels, out_channels, reduce_rate=4, dilations=[1, 2, 3, 5]):
         super(DenseASPP3D, self).__init__()
         self.aspp1 = nn.Sequential(
             nn.Conv3d(in_channels, out_channels//reduce_rate, kernel_size=3, padding=dilations[0], dilation=dilations[0]),
@@ -42,10 +42,13 @@ class DenseASPP3D(nn.Module):
         self.global_avg = nn.Sequential(
             nn.AdaptiveAvgPool3d(1),
             nn.Conv3d(in_channels, out_channels//reduce_rate, kernel_size=1),
-            nn.GroupNorm(4, out_channels//reduce_rate)
+            nn.ReLU(inplace=True),
+            nn.Conv3d(out_channels//reduce_rate, in_channels, kernel_size=1),
+            nn.Conv3d(in_channels, out_channels, kernel_size=1),
+            nn.Sigmoid()
         ) 
         self.fusion = nn.Sequential(
-            nn.Conv3d(5*(out_channels//reduce_rate), out_channels, 1),
+            nn.Conv3d(4*(out_channels//reduce_rate), out_channels, 1),
             nn.GroupNorm(8, out_channels),
         )
         self.act = nn.ReLU(inplace=True)
@@ -56,10 +59,11 @@ class DenseASPP3D(nn.Module):
         x2 = self.aspp2(torch.cat([x, x1], 1))
         x3 = self.aspp3(torch.cat([x, x1, x2], 1))
         x4 = self.aspp4(torch.cat([x, x1, x2, x3], 1))
-        x5 = self.global_avg(x)
-        x5 = F.interpolate(x5, size=x4.size()[2:], mode='trilinear', align_corners=True)
-        fusion_x = torch.cat([x1, x2, x3, x4, x5], 1)
+        channel_attented = self.global_avg(x)
+        # x5 = F.interpolate(x5, size=x4.size()[2:], mode='trilinear', align_corners=True)
+        fusion_x = torch.cat([x1, x2, x3, x4], 1)
         out = self.fusion(fusion_x)
+        out = out * channel_attented
         out = self.act(out)
         return out
     
