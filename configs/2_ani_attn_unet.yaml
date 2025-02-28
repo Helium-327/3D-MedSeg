@@ -13,7 +13,7 @@ val_length: 100
 test_length: 10
 
 # model:
-model_name: "unetrpp"
+model_name: "ani_attn_unet"
 in_channel: 4
 mid_channel: 32
 out_channel: 4
@@ -47,4 +47,4 @@ val_csv_path: "/root/autodl-tmp/3D-MedSeg/data/brats21_original/val.csv"
 test_csv_path: "/root/autodl-tmp/3D-MedSeg/data/brats21_original/test.csv"
 results_dir: "/root/autodl-tmp/3D-MedSeg/results"
 
-commit: "debug"/
+commit: "debug"

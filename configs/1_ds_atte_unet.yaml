@@ -2,7 +2,7 @@
 epochs: 200
 batch_size: 2
 num_workers: 8
-early_stop_patience: 30
+early_stop_patience: 50
 save_max: 5
 interval: 1
 tb: true
@@ -39,12 +39,12 @@ loss_type: "diceloss"
 
 # paths:
 resume: false
-root: "/root/workspace/BraTS_Solution"
-data_dir: "/root/workspace/BraTS_Solution/data"
-output_dir: "/root/workspace/BraTS_Solution/output"
-train_csv_path: "/root/workspace/BraTS_Solution/data/brats21_original/train.csv"
-val_csv_path: "/root/workspace/BraTS_Solution/data/brats21_original/val.csv"
-test_csv_path: "/root/workspace/BraTS_Solution/data/brats21_original/test.csv"
-results_dir: "/root/workspace/BraTS_Solution/results"
+root: "/root/autodl-tmp/3D-MedSeg"
+data_dir: "/root/autodl-tmp/3D-MedSeg/data"
+output_dir: "/root/autodl-tmp/3D-MedSeg/output"
+train_csv_path: "/root/autodl-tmp/3D-MedSeg/data/brats21_original/train.csv"
+val_csv_path: "/root/autodl-tmp/3D-MedSeg/data/brats21_original/val.csv"
+test_csv_path: "/root/autodl-tmp/3D-MedSeg/data/brats21_original/test.csv"
+results_dir: "/root/autodl-tmp/3D-MedSeg/results"
 
 commit: "debug"
