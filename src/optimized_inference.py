@@ -403,6 +403,8 @@ if __name__ == '__main__':
     attention_unet_model = load_model('AttentionUNet3D')
     attention_unet_denseaspp_model = load_model('DasppResAtteUNet')
     attention_unet_scga_model = load_model('ScgaResAtteUNet')
+    attention_unet_aa_model = load_model('AAUNet')
+    
         
     # 初始化配置
     unet_config = {
@@ -446,8 +448,19 @@ if __name__ == '__main__':
         'ckpt_path': '/root/workspace/BraTS_Solution/results/best@e53_ScgaResAtteUNet__diceloss0.1556_dice0.8447_2025-02-25_18-29-04_14.pth'
     }
 
+    attention_aa_unet_cfg = {
+        'test_df': test_df,
+        'test_loader': test_loader,
+        'output_root': out_dir,
+        'model': attention_unet_aa_model,
+        'metricer': EvaluationMetrics(),
+        'scaler': GradScaler(),
+        'optimizer': AdamW(attention_unet_aa_model.parameters(), lr=0.0001, betas=(0.9, 0.99), weight_decay=0.00001),
+        'ckpt_path': '/root/workspace/BraTS_Solution/results/best@e136_AAUNet__diceloss0.1404_dice0.8599_2025-02-25_19-55-50_9.pth'
+    }
     # 执行推理
     # unet_results = inference(**unet_config)
     # attention_unet_results = inference(**attention_unet_config)
-    attention_unet_denseaspp_results = inference(**attention_unet_denseaspp_config)
+    # attention_unet_denseaspp_results = inference(**attention_unet_denseaspp_config)
     # attention_unet_scga_results = inference(**attention_unet_scga_config)
+    attention_unet_aa_results = inference(**attention_aa_unet_cfg)

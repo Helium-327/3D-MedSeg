@@ -22,7 +22,7 @@ from src.utils.test_unet import test_unet
 def init_weights_3d(m):
     """Initialize 3D卷积和BN层的权重"""
     if isinstance(m, (nn.Conv3d, nn.ConvTranspose3d)):
-        nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+        nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='leaky_relu')
         if m.bias is not None:
             nn.init.constant_(m.bias, 0)
     elif isinstance(m, nn.BatchNorm3d):
@@ -37,12 +37,12 @@ class SingleAxialAttention(nn.Module):
         参数：
             in_ch: 输入通道维度
             heads: 注意力头数（默认4）
-            axis: 注意力计算轴（0-深度轴，1-高度轴，2-宽度轴）
+            axis: 注意力计算轴（0-深度轴，1-高度轴，2-宽度轴)
         """
         super(SingleAxialAttention, self).__init__()
         self.eps = eps
         self.heads = heads
-        # 缩放因子，用于稳定softmax计算（类似Transformer的1/sqrt(d_k)）
+        # 缩放因子，用于稳定softmax计算（类似Transformer的1/sqrt(d_k)
         self.scale = (in_ch // heads) ** -0.5
         self.axis = axis  # 指定注意力作用的轴向
         
@@ -114,38 +114,44 @@ class AxialAttention3D(nn.Module):
 
 class CrossModalityFusionGate(nn.Module):
     """跨轴动态融合模块"""
-    def __init__(self, mod_num=4):
+    def __init__(self, mod_num=4, init_temp=0.3):
         super().__init__()
         
         self.mod_num = mod_num
-        self.scale = nn.Parameter(torch.ones(1))  # 可学习缩放参数
+        # self.scale = nn.Parameter(torch.ones(1))  # 可学习缩放参数
          
         self.gate = nn.Sequential(
-            nn.Conv3d(mod_num, 1, 1),
-            nn.Conv3d(1, mod_num, 1),
-            nn.Softmax(dim=1)
+            nn.Conv3d(mod_num, 16, 1),  # 扩展中间维度
+            nn.GroupNorm(4, 16),        # 分组归一化
+            nn.LeakyReLU(0.1),
+            nn.Conv3d(16, mod_num, 1),
+            nn.Tanh()  # 限制输出范围[-1,1]
         )
+        self.temperature = nn.Parameter(torch.tensor([init_temp]))
+        nn.init.constant_(self.temperature, init_temp)
         self.apply(init_weights_3d) 
+        
+        self.res_scale = nn.Parameter(torch.ones(1)*0.5)
         # self.axial_attns = AxialAttention3D(in_ch=mod_num, heads=4)
 
         # self.conv1x1 = nn.Conv3d(mod_num, out_ch, 1)
+    def _init_weights(self, m):
+        if isinstance(m, nn.Conv3d):
+            nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='leaky_relu')
+            if m.bias is not None:
+                nn.init.constant_(m.bias, 0)
     def forward(self, x):
-        # 计算权重
-        gate_weights = self.gate(x)
-        out = x * gate_weights + x # 权重加权
+        # 生成门控权重
+        gate_logits = self.gate(x)  # [-1,1]
         
-        # # 跨轴注意力 (暂时不使用)
-        # attn_outputs = self.axial_attns(x)
+        # 温度缩放Softmax
+        weights = F.softmax(gate_logits / (self.temperature.abs() + 1e-6), dim=1)
         
-        # # 残差
-        # out = self.scale * attn_outputs + x
-        
-        out = F.relu(out)
-
+        # 稳定残差融合
+        out = x * weights * self.res_scale + x * (1 - self.res_scale)
         return out
     
 class ResConv3D(nn.Module):
-    
     def __init__(self, in_channels, out_channels, dropout_rate=0.2):
         super().__init__()
         self.conv = nn.Sequential(
@@ -156,6 +162,7 @@ class ResConv3D(nn.Module):
             nn.InstanceNorm3d(out_channels),
             nn.Dropout3d(p=dropout_rate)
             )
+        
         self.shortcut = nn.Conv3d(in_channels, out_channels, kernel_size=1) if in_channels != out_channels else None
         self.relu = nn.LeakyReLU(0.1, inplace=True)
         
@@ -359,6 +366,8 @@ class EnhancedAttentionGate(nn.Module):
         
     def forward(self, g, x):
         fused = F.relu(self.W_g(g) + self.W_x(x))
+        
+        # 空间注意力和通道注意力机制
         spatial_weight = self.spatial_att(fused)
         channel_weight = self.channel_att(fused)
         return x * (spatial_weight.expand_as(x) + channel_weight.expand_as(x))  # 双路加权

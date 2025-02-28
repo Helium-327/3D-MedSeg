@@ -22,13 +22,13 @@ model:
 
 optimizer:
   type: "adamw"
-  lr: 0.0001
+  lr: 0.0002
   wd: 0.00001
   reduce_patience: 3
   reduce_factor: 0.9
 
 scheduler:
-  type: "CosineWarmupRestarts"
+  type: "cosine"
   cosine_T_0: 10
   cosine_T_mult: 2
   cosine_eta_min: 1e-6
@@ -39,12 +39,12 @@ loss:
 
 paths:
   resume: false
-  root: "/root/workspace/VoxelMedix"
-  data_root: "/root/workspace/VoxelMedix/data"
-  output: "/root/workspace/VoxelMedix/output"
-  train_csv: "/root/workspace/VoxelMedix/data/raw/brats21_original/train.csv"
-  val_csv: "/root/workspace/VoxelMedix/data/raw/brats21_original/val.csv"
-  test_csv: "/root/workspace/VoxelMedix/data/raw/brats21_original/test.csv"
-  results_root: "/root/workspace/VoxelMedix/results"
+  root: "/root/workspace/BraTS_Solution"
+  data_root: "/root/workspace/BraTS_Solution/data"
+  output: "/root/workspace/BraTS_Solution/output"
+  train_csv: "/root/workspace/BraTS_Solution/data/raw/brats21_original/train.csv"
+  val_csv: "/root/workspace/BraTS_Solution/data/raw/brats21_original/val.csv"
+  test_csv: "/root/workspace/BraTS_Solution/data/raw/brats21_original/test.csv"
+  results_root: "/root/workspace/BraTS_Solution/results"
 
 commit: "debug"

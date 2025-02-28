@@ -71,31 +71,9 @@ def load_model(args):
     elif args.model_name == 'attention_unet3d':
         model = AttentionUNet3D(in_channels=4, out_channels=4)
     elif args.model_name == 'unetr':
-        model = UNETR(
-        in_channels=4,
-        out_channels=4,
-        img_size=(128, 128, 128),
-        feature_size=16,
-        hidden_size=768,
-        num_heads=12,
-        spatial_dims=3,
-        predict_mode=True  # 设置为预测模式
-    )
+        model = UNETR(in_channels=4, out_channels=4)
     elif args.model_name == 'unetrpp':
-        model  = UNETR_PP(
-        in_channels=4,
-        out_channels=4,  # 假设分割为2类
-        feature_size=16,
-        hidden_size=256,
-        num_heads=8,
-        pos_embed="perceptron",
-        norm_name="instance",
-        dropout_rate=0.1,
-        depths=[3, 3, 3, 3],
-        dims=[32, 64, 128, 256],
-        conv_op=nn.Conv3d,
-        do_ds=False,
-    )
+        model = UNETR_PP(in_channels=4, out_channels=4)
     elif args.model_name == 'segformer':
         model = SegFormer3D(in_channels=4, out_channels=4)
     elif args.model_name == 'mamba3d':
@@ -372,7 +350,7 @@ if __name__ == '__main__':
     ## 定义全局参数
     parser = argparse.ArgumentParser(description='Train args')
     parser.add_argument('--config', type=str, 
-                        default='/root/workspace/BraTS_Solution/src/configs/1_unetr_pp.yaml', 
+                        default='/root/workspace/BraTS_Solution/src/configs/1_unetr.yaml', 
                         help='Path to the configuration YAML file')
     # parser.add_argument('--resume', type=str, 
     #                     default=False, 

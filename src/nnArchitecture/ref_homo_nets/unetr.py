@@ -23,6 +23,7 @@ import sys
 sys.path.append('/root/workspace/VoxelMedix/src/nnArchitecture')
 # from __future__ import annotations
 
+
 from collections.abc import Sequence
 import torch
 import torch.nn as nn
@@ -31,16 +32,20 @@ from monai.networks.blocks.unetr_block import UnetrBasicBlock, UnetrPrUpBlock, U
 from monai.networks.nets.vit import ViT
 from monai.utils import deprecated_arg, ensure_tuple_rep
 # from _init_model import init_all_weights
+torch.autograd.set_detect_anomaly(True) 
             
 def init_weights_3d(m):
-    """Initialize 3D卷积和BN层的权重"""
     if isinstance(m, (nn.Conv3d, nn.ConvTranspose3d)):
-        nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='leaky_relu')
+        nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')  # 适配GELU
         if m.bias is not None:
             nn.init.constant_(m.bias, 0)
-    elif isinstance(m, nn.BatchNorm3d):
+    elif isinstance(m, (nn.LayerNorm)):
         nn.init.constant_(m.weight, 1)
         nn.init.constant_(m.bias, 0)
+    elif isinstance(m, nn.Linear):  # 初始化Transformer线性层
+        nn.init.xavier_normal_(m.weight)
+        if m.bias is not None:
+            nn.init.constant_(m.bias, 0)
             
 class UNETR(nn.Module):
     """

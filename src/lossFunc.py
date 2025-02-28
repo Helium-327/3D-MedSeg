@@ -60,10 +60,10 @@ class DiceLoss(BaseLoss):
         area_et_loss, area_tc_loss, area_wt_loss = self.get_every_sub_areas_loss(pred_list, mask_list)
         mean_loss = (area_et_loss + area_tc_loss + area_wt_loss) / 3
         
-        self._check_nan(area_et_loss, 'ET')
-        self._check_nan(area_tc_loss, 'TC')
-        self._check_nan(area_wt_loss, 'WT')
-        self._check_nan(mean_loss, "Mean")
+        # self._check_nan(area_et_loss, 'ET')
+        # self._check_nan(area_tc_loss, 'TC')
+        # self._check_nan(area_wt_loss, 'WT')
+        # self._check_nan(mean_loss, "Mean")
         return mean_loss, area_et_loss, area_tc_loss, area_wt_loss
 
     def get_every_sub_areas_loss(self, pred_list, mask_list):
@@ -78,14 +78,14 @@ class DiceLoss(BaseLoss):
         area_tc_loss = loss_dict['TC']
         area_wt_loss = loss_dict['WT']
         
-        if not self._check_nan(area_et_loss, 'ET'):
-            print(f"NaN detected in ET loss!")
+        # if not self._check_nan(area_et_loss, 'ET'):
+        #     print(f"NaN detected in ET loss!")
         
-        if not self._check_nan(area_tc_loss, 'TC'):
-            print(f"NaN detected in ET loss!")
+        # if not self._check_nan(area_tc_loss, 'TC'):
+        #     print(f"NaN detected in ET loss!")
         
-        if not self._check_nan(area_wt_loss, 'WT'):
-            print(f"NaN detected in ET loss!")
+        # if not self._check_nan(area_wt_loss, 'WT'):
+        #     print(f"NaN detected in ET loss!")
             
         
         return area_et_loss, area_tc_loss, area_wt_loss
