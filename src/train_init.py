@@ -26,6 +26,8 @@ from nnArchitecture.optimization_nets.DasppResAtteUNet import DasppResAtteUNet
 from nnArchitecture.optimization_nets.ScgaResAtteUNet import ScgaResAtteUNet
 from nnArchitecture.optimization_nets.ScgaDasppResAtteUNet import ScgaDasppResAtteUNet
 from nnArchitecture.optimization_nets.AA_UNet import AAUNet
+from nnArchitecture.optimization_nets.AnisotrpicUNet import AnisotrpicUNet
+from nnArchitecture.optimization_nets.EagAttnUNet import EagAttnUNet
 
 # 同构网络
 from nnArchitecture.ref_homo_nets.unetr import UNETR
@@ -99,6 +101,10 @@ def load_model(args):
         model = ScgaDasppResAtteUNet(in_channels=4, out_channels=4)
     elif args.model_name == 'aa_unet':
         model = AAUNet(in_channels=4, out_channels=4)
+    elif args.model_name == 'ani_attn_unet':
+        model = AnisotrpicUNet(in_channels=4, out_channels=4)
+    elif args.model_name == 'eag_attn_unet':
+        model = EagAttnUNet(in_channels=4, out_channels=4)
     else:
         raise ValueError(f"Unknown model name: {args.model_name}")
     

@@ -186,9 +186,9 @@ class UpSample(nn.Module):
     def forward(self, x):
         return self.up(x)
     
-class AnisotrpicUNet(nn.Module):
+class EagAttnUNet(nn.Module):
     def __init__(self, in_channels=4, out_channels=4, f_list=[32, 64, 128, 256], trilinear=True):
-        super(AnisotrpicUNet, self).__init__()
+        super(EagAttnUNet, self).__init__()
         
         self.MaxPool = nn.MaxPool3d(kernel_size=2, stride=2)
         # self.modality_fusion = CrossModalityFusionGate(mod_num=in_channels)
@@ -260,4 +260,4 @@ class AnisotrpicUNet(nn.Module):
         
              
 if __name__ == "__main__":
-    test_unet(model_class=AnisotrpicUNet, batch_size=1)   
+    test_unet(model_class=EagAttnUNet, batch_size=1)   

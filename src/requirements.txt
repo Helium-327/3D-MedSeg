@@ -7,5 +7,5 @@ monai
 batchgenerators
 timm
 einops
-mamba_ssm
+# mamba_ssm
 triton

@@ -280,7 +280,7 @@ if __name__ == '__main__':
     ## 定义全局参数
     parser = argparse.ArgumentParser(description='Train args')
     parser.add_argument('--config', type=str, 
-                        default='/root/workspace/BraTS_Solution/src/configs/1_unetr_pp.yaml', 
+                        default='/root/autodl-tmp/3D-MedSeg/configs/2_eag_attn_unet.yaml',   #! 每次训练之前检查config文件
                         help='Path to the configuration YAML file')
     parser.add_argument('--resume', type=str, 
                         default=False, 
@@ -301,26 +301,26 @@ if __name__ == '__main__':
 
     # 解析命令行参数
     global_args = vars(parser.parse_args())  
-    print(f'全局参数:')
-    for k, v in global_args.items():
-        print(k, v)
+    # print(f'全局参数:')
+    # for k, v in global_args.items():
+    #     print(k, v)
     # 2. 从 YAML 文件中加载局部参数
     local_args = parse_args_from_yaml(global_args['config'])
-    print(f'局部参数: ')
-    for k, v in local_args.items():
-        print(k, v)
+    # print(f'局部参数: ')
+    # for k, v in local_args.items():
+    #     print(k, v)
     # 3. 合并局部参数和全局参数，全局参数优先
     merged_args = merge_args(local_args, global_args)
-    print(f'合并后的参数: ')
-    for k, v in merged_args.items():
-        print(k, v)
+    # print(f'合并后的参数: ')
+    # for k, v in merged_args.items():
+    #     print(k, v)
     
     # 4. 展平配置字典（可选，如果需要扁平化参数）
     flattened_args = flatten_config(merged_args)
 
     end_time = time.time()
     
-    print(f"加载配置文件耗时: {end_time - start_time:.2f} s")
+    # print(f"加载配置文件耗时: {end_time - start_time:.2f} s")
     
     print(f"加载配置文件耗时: {end_time - start_time:.2f} s")
     main(args = argparse.Namespace(**flattened_args))

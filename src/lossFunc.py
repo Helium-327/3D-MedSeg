@@ -7,8 +7,6 @@
 *      VERSION: v1.0
 =================================================
 '''
-
-from sklearn.model_selection import PredefinedSplit
 from torch import nn
 from torch.nn import CrossEntropyLoss
 from torch.nn import functional as F
