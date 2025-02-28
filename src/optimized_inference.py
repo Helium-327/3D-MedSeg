@@ -28,20 +28,7 @@ from lossFunc import DiceLoss, CELoss
 from metrics import *
 from utils.logger_tools import custom_logger, get_current_date, get_current_time
 from utils.ckpt_tools import load_checkpoint
-from nnArchitecture.baselines.UNet3d import UNet3D
-from nnArchitecture.baselines.AttentionUNet import AttentionUNet3D
-
-from nnArchitecture.optimization_nets.DasppResAtteUNet import DasppResAtteUNet
-from nnArchitecture.optimization_nets.ScgaResAtteUNet import ScgaResAtteUNet
-from nnArchitecture.optimization_nets.AA_UNet import AAUNet
-
-
-from nnArchitecture.ref_homo_nets.unetr import UNETR
-from nnArchitecture.ref_homo_nets.unetrpp import UNETR_PP
-from nnArchitecture.ref_homo_nets.segFormer3d import SegFormer3D
-
-from nnArchitecture.ref_hetero_nets.Mamba3d import Mamba3d
-from nnArchitecture.ref_hetero_nets.MogaNet import MogaNet
+from train_init import load_model
 
 Tensor = torch.Tensor
 Model = torch.nn.Module
@@ -51,34 +38,6 @@ AdamW = torch.optim.AdamW
 GradScaler = torch.amp.GradScaler
 autocast = torch.amp.autocast('cuda')
 
-def load_model(model_name):
-    """加载模型"""
-    if model_name == 'UNet3D':
-        model = UNet3D(in_channels=4, out_channels=4)
-    elif model_name == 'AttentionUNet3D':
-        model = AttentionUNet3D(in_channels=4, out_channels=4)
-    elif model_name == 'UNETR':
-        model = UNETR(in_channels=4, out_channels=4)
-    elif model_name == 'UNETR_PP':
-        model = UNETR_PP(in_channels=4, out_channels=4)
-    elif model_name == 'SegFormer3D':
-        model = SegFormer3D(in_channels=4, out_channels=4)
-    elif model_name == 'Mamba3d':
-        model = Mamba3d(in_channels=4, out_channels=4)
-    elif model_name == 'MogaNet':
-        model = MogaNet(in_channels=4, out_channels=4)
-    elif model_name == 'DasppResAtteUNet':
-        model = DasppResAtteUNet(in_channels=4, out_channels=4)
-    elif model_name == 'ScgaResAtteUNet':
-        model = ScgaResAtteUNet(in_channels=4, out_channels=4)
-    elif model_name == 'AAUNet':
-        model = AAUNet(in_channels=4, out_channels=4)
-    else:
-        raise ValueError(f"Unknown model name: {model_name}")
-    
-    model = model.to(Device)
-    
-    return model
 
 
 def load_data(test_csv, local_train=True, test_length=10, batch_size=1, num_workers=4):
@@ -187,7 +146,7 @@ def inference(
         output_path=output_path
     )
     
-    return final_metrics
+    # return final_metrics
 
 def slide_window_pred(inputs, model, roi_size=128, sw_batch_size=4, overlap=0.5, mode="gaussian"):
     """

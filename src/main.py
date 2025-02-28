@@ -20,29 +20,14 @@ from train import train
 from tabulate import tabulate
 from torch.utils.data import DataLoader
 # from torchio.data import SubjectsLoader as DataLoader
-from torch.optim import Adam, SGD, RMSprop, AdamW
 from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR, CosineAnnealingWarmRestarts
+from torch.optim import Adam, SGD, RMSprop, AdamW
+from metrics import EvaluationMetrics
 from torch.amp import GradScaler
+from train_init import load_model, load_loss, load_optimizer, load_scheduler
 from utils.logger_tools import *
 from utils.shell_tools import *
 from utils.tb_tools import *
-from metrics import EvaluationMetrics
-
-from nnArchitecture.baselines.UNet3d import UNet3D
-from nnArchitecture.baselines.AttentionUNet import AttentionUNet3D
-
-from nnArchitecture.optimization_nets.DasppResAtteUNet import DasppResAtteUNet
-from nnArchitecture.optimization_nets.ScgaResAtteUNet import ScgaResAtteUNet
-from nnArchitecture.optimization_nets.ScgaDasppResAtteUNet import ScgaDasppResAtteUNet
-from nnArchitecture.optimization_nets.AA_UNet import AAUNet
-
-
-from nnArchitecture.ref_homo_nets.unetr import UNETR
-from nnArchitecture.ref_homo_nets.unetrpp import UNETR_PP
-from nnArchitecture.ref_homo_nets.segFormer3d import SegFormer3D
-
-# from nnArchitecture.ref_hetero_nets.Mamba3d import Mamba3d
-# from nnArchitecture.ref_hetero_nets.MogaNet import MogaNet
 
 from datasets.transforms import *
 from datasets.BraTS21 import BraTS21_3D
@@ -61,83 +46,6 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 RANDOM_SEED = 42
 scaler = GradScaler()  # 混合精度训练
 MetricsGo = EvaluationMetrics()  # 实例化评估指标类
-
-
-
-def load_model(args):
-    """加载模型"""
-    if args.model_name == 'unet3d':
-        model = UNet3D(in_channels=4, out_channels=4)
-    elif args.model_name == 'attention_unet3d':
-        model = AttentionUNet3D(in_channels=4, out_channels=4)
-    elif args.model_name == 'unetr':
-        model = UNETR(
-        in_channels=4,
-        out_channels=4,
-        img_size=(128, 128, 128),
-        feature_size=16,
-        hidden_size=768,
-        num_heads=12,
-        spatial_dims=3,
-        predict_mode=True  # 设置为预测模式
-    )
-    elif args.model_name == 'unetrpp':
-        model  = UNETR_PP(
-        in_channels=4,
-        out_channels=4,  # 假设分割为2类
-        feature_size=16,
-        hidden_size=256,
-        num_heads=8,
-        pos_embed="perceptron",
-        norm_name="instance",
-        dropout_rate=0.1,
-        depths=[3, 3, 3, 3],
-        dims=[32, 64, 128, 256],
-        conv_op=nn.Conv3d,
-        do_ds=False,
-    )
-    elif args.model_name == 'segformer':
-        model = SegFormer3D(in_channels=4, out_channels=4)
-    elif args.model_name == 'mamba3d':
-        model = Mamba3d(in_channels=4, out_channels=4)
-    elif args.model_name == 'moganet':
-        model = MogaNet(in_channels=4, out_channels=4)
-    elif args.model_name == 'd_atte_unet':
-        model = DasppResAtteUNet(in_channels=4, out_channels=4)
-    elif args.model_name == 's_atte_unet':
-        model = ScgaResAtteUNet(in_channels=4, out_channels=4)
-    elif args.model_name == 'ds_atte_unet':
-        model = ScgaDasppResAtteUNet(in_channels=4, out_channels=4)
-    elif args.model_name == 'aa_unet':
-        model = AAUNet(in_channels=4, out_channels=4)
-    else:
-        raise ValueError(f"Unknown model name: {args.model_name}")
-    
-    model = model.to(DEVICE)
-    
-    return model
-
-def load_optimizer(args, model):
-    """加载优化器"""
-    optimizer = AdamW(model.parameters(), lr=float(args.optimizer_lr), betas=(0.9, 0.99), weight_decay=float(args.optimizer_wd))
-    return optimizer
-
-def load_scheduler(args, optimizer):
-    """加载调度器"""
-    scheduler = CosineAnnealingLR(optimizer, T_max=int(args.scheduler_cosine_T_max), eta_min=float(args.scheduler_cosine_eta_min))
-    return scheduler
-
-def load_loss(args):
-    """加载损失函数"""
-    if args.loss_type == 'diceloss':
-        loss_function = DiceLoss()
-    elif args.loss_type == 'bceloss':
-        loss_function = FocalLoss()
-    elif args.loss_type == 'celoss':
-        loss_function = CELoss()
-    else:
-        raise ValueError(f"Loss function {args.loss_type} not supported")
-    return loss_function
     
 
 def log_params(params, logs_path):
@@ -189,51 +97,51 @@ def load_data(args):
     ])
 
     train_dataset = BraTS21_3D(
-        data_file=args.paths_train_csv,
+        data_file=args.train_csv_path,
         transform=TransMethods_train,
-        local_train=args.training_local,
-        length=args.training_train_length,
+        local_train=args.local,
+        length=args.train_length,
     )
 
     val_dataset = BraTS21_3D(
-        data_file=args.paths_val_csv,
+        data_file=args.val_csv_path,
         transform=TransMethods_val,
-        local_train=args.training_local,
-        length=args.training_val_length,
+        local_train=args.local,
+        length=args.val_length,
     )
 
     test_dataset = BraTS21_3D(
-        data_file=args.paths_test_csv,
+        data_file=args.test_csv_path,
         transform=TransMethods_test,
-        local_train=args.training_local,
-        length=args.training_test_length,
+        local_train=args.local,
+        length=args.test_length,
     )
     setattr(args, 'train_length', len(train_dataset))
     setattr(args, 'val_length', len(val_dataset))
 
     train_loader = DataLoader(
         dataset=train_dataset,
-        batch_size=args.training_batch_size,
+        batch_size=args.batch_size,
         shuffle=True,
-        num_workers=args.training_num_workers,
+        num_workers=args.num_workers,
         pin_memory=True,
         persistent_workers=True  # 减少 worker 初始化时间
     )
 
     val_loader = DataLoader(
         dataset=val_dataset,
-        batch_size=args.training_batch_size,
+        batch_size=args.batch_size,
         shuffle=False,
-        num_workers=args.training_num_workers,
+        num_workers=args.num_workers,
         pin_memory=True,
         persistent_workers=True  # 减少 worker 初始化时间
     )
     
     test_loader = DataLoader(
         dataset=test_dataset,
-        batch_size=args.training_batch_size,
+        batch_size=args.batch_size,
         shuffle=False,
-        num_workers=args.training_num_workers,
+        num_workers=args.num_workers,
         pin_memory=True,
         persistent_workers=True  # 减少 worker 初始化时间
     )
@@ -268,8 +176,8 @@ def main(args):
     # loss_name = loss_function.__class__.__name__
     
     """------------------------------------- 定义或获取路径 --------------------------------------------"""
-    if args.paths_resume:
-        resume_path = args.paths_resume
+    if args.resume:
+        resume_path = args.resume
         print(f"Resuming training from {resume_path}")
         results_dir = os.path.join('/',*resume_path.split('/')[:-2])
         resume_tb_path = os.path.join(results_dir, 'tensorBoard')
@@ -277,8 +185,8 @@ def main(args):
         logs_file_name = [file for file in os.listdir(logs_dir) if file.endswith('.log')]
         logs_path = os.path.join(logs_dir, logs_file_name[0])
     else:
-        os.makedirs(args.paths_results_root, exist_ok=True)
-        results_dir = os.path.join(args.paths_results_root, ('_').join([model_name, f'{get_current_date()}_{get_current_time()}']))       # TODO: 改成网络对应的文件夹
+        os.makedirs(args.results_dir, exist_ok=True)
+        results_dir = os.path.join(args.results_dir, ('_').join([model_name, f'{get_current_date()}_{get_current_time()}']))       # TODO: 改成网络对应的文件夹
         os.makedirs(results_dir, exist_ok=True)
         logs_dir = os.path.join(results_dir, 'logs')
         logs_path = os.path.join(logs_dir, f'{get_current_date()}.log')
@@ -290,13 +198,13 @@ def main(args):
 
 
     """------------------------------------- 断点续传 --------------------------------------------"""
-    if args.paths_resume:
-        print(f"Resuming training from checkpoint {args.paths_resume}")
-        checkpoint = torch.load(args.paths_resume)
+    if args.resume:
+        print(f"Resuming training from checkpoint {args.resume}")
+        checkpoint = torch.load(args.resume)
         best_val_loss = checkpoint['best_val_loss']
         start_epoch = checkpoint['epoch']
         model.load_state_dict(checkpoint['model_state_dict'])
-        print(f"Loaded checkpoint {args.paths_resume}")
+        print(f"Loaded checkpoint {args.resume}")
         print(f"Best val loss: {best_val_loss:.4f} ✈ epoch {start_epoch}")
         cutoff_tb_data(resume_tb_path, start_epoch)
         print(f"Refix resume tb data step {resume_tb_path} up to step {start_epoch}")
@@ -318,18 +226,18 @@ def main(args):
           optimizer=optimizer,
           scheduler=scheduler,
           loss_function=loss_function,
-          num_epochs=args.training_epochs, 
+          num_epochs=args.epochs, 
           device=DEVICE, 
           results_dir=results_dir,
           logs_path=logs_path,
-          output_path=args.paths_output,
+          output_path=args.output_dir,
           start_epoch=start_epoch,
           best_val_loss=best_val_loss,
-          test_csv=args.paths_test_csv,
-          tb=args.training_tb,
-          interval=args.training_interval,
-          save_max=args.training_save_max,
-          early_stopping_patience=args.training_early_stop_patience,
+          test_csv=args.test_csv_path,
+          tb=args.tb,
+          interval=args.interval,
+          save_max=args.save_max,
+          early_stopping_patience=args.early_stop_patience,
           resume_tb_path=resume_tb_path)
 
 def parse_args_from_yaml(yaml_file):
@@ -374,30 +282,39 @@ if __name__ == '__main__':
     parser.add_argument('--config', type=str, 
                         default='/root/workspace/BraTS_Solution/src/configs/1_unetr_pp.yaml', 
                         help='Path to the configuration YAML file')
-    # parser.add_argument('--resume', type=str, 
-    #                     default=False, 
-    #                     help='Path to the checkpoint to resume training from')
-    # parser.add_argument('--resume_tb_path', type=str,
-    #                     default=False, 
-    #                     help='Path to the TensorBoard logs to resume from')
-    # parser.add_argument('--training_local', type=str,
-    #                     default=True, help='training epoch')   
-    # parser.add_argument('--training_epochs', type=str,
-    #                     default=100, help='training epoch')
-    # parser.add_argument('--training_train_length', type=str,
-    #                     default=200, help='training epoch')
-    # parser.add_argument('--training_val_length', type=str,
-    #                     default=40, help='training epoch')
+    parser.add_argument('--resume', type=str, 
+                        default=False, 
+                        help='Path to the checkpoint to resume training from')
+    parser.add_argument('--resume_tb_path', type=str,
+                        default=False, 
+                        help='Path to the TensorBoard logs to resume from')
+    parser.add_argument('--local', type=str,
+                        default=True, help='training epoch')   
+    parser.add_argument('--epochs', type=str,
+                        default=20, help='training epoch')
+    parser.add_argument('--train_length', type=str,
+                        default=20, help='training epoch')
+    parser.add_argument('--val_length', type=str,
+                        default=4, help='training epoch')
+    parser.add_argument('--early_stop_patience', type=str,
+                        default=1, help='training epoch')
 
     # 解析命令行参数
     global_args = vars(parser.parse_args())  
-
+    print(f'全局参数:')
+    for k, v in global_args.items():
+        print(k, v)
     # 2. 从 YAML 文件中加载局部参数
     local_args = parse_args_from_yaml(global_args['config'])
-
+    print(f'局部参数: ')
+    for k, v in local_args.items():
+        print(k, v)
     # 3. 合并局部参数和全局参数，全局参数优先
     merged_args = merge_args(local_args, global_args)
-
+    print(f'合并后的参数: ')
+    for k, v in merged_args.items():
+        print(k, v)
+    
     # 4. 展平配置字典（可选，如果需要扁平化参数）
     flattened_args = flatten_config(merged_args)
 

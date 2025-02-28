@@ -41,40 +41,12 @@ from lossFunc import DiceLoss, CELoss
 from metrics import *
 from utils.logger_tools import custom_logger, get_current_date, get_current_time
 from utils.ckpt_tools import load_checkpoint
+from train_init import load_model
 
-from nnArchitecture.baselines.UNet3d import UNet3D
-from nnArchitecture.baselines.AttentionUNet import AttentionUNet3D
-
-from nnArchitecture.optimization_nets.DasppResAtteUNet import DasppResAtteUNet
-from nnArchitecture.optimization_nets.ScgaResAtteUNet import ScgaResAtteUNet
-from nnArchitecture.optimization_nets.ScgaDasppAttnUNet import ScgaDasppAttnUNet
-from nnArchitecture.optimization_nets.AA_UNet import AAUNet
-
-# from nnArchitecture.dw_unet3d import  DW_UNet3D
-
-# from utils.plot_tools.plot_results import NiiViewer
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
-def load_model(args):
-    """加载模型"""
-    if args.model_name == 'unet3d':
-        model = UNet3D(in_channels=4, out_channels=4)
-    elif args.model_name == 'attention_unet3d':
-        model = AttentionUNet3D(in_channels=4, out_channels=4)
-    elif args.model_name == 'res_attention_unet3d':
-        model = RA_UNet(in_channels=4, out_channels=4)
-    elif args.model_name == 'daspp_res_atte_unet':
-        model = DasppResAtteUNet(in_channels=4, out_channels=4)
-    elif args.model_name == 'scga_daspp_res_atte_unet':
-        model = ScgaDasppResAtteUNet(in_channels=4, out_channels=4)
-    else:
-        raise ValueError(f"Unknown model name: {args.model_name}")
-    
-    model = model.to(DEVICE)
-    
-    return model
 
 
 
