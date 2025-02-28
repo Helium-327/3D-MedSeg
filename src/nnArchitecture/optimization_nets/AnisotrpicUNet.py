@@ -416,7 +416,7 @@ class AnisotrpicUNet(nn.Module):
         self.Conv3 = HybridAttnBlock(f_list[1], f_list[2])
         self.Conv4 = HybridAttnBlock(f_list[2], f_list[3])
         
-        self.bottleneck = HybridAttnBlock(f_list[3], f_list[3])
+        self.bottleneck = ResConv3D(f_list[3], f_list[3])
         
         self.Up5 = UpSample(f_list[3], f_list[3], trilinear)
         self.Att5 = AttentionGate(F_g=f_list[3], F_l=f_list[3], F_inter=f_list[3]//2)
