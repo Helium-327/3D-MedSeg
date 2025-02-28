@@ -12,7 +12,6 @@
 import os
 import time
 import shutil
-from humanize import metric
 import nibabel as nib
 import numpy as np
 import pandas as pd
@@ -24,9 +23,7 @@ from typing import Tuple, Dict, Any, Optional
 
 from datasets.BraTS21 import BraTS21_3D
 from datasets.transforms import Compose, FrontGroundNormalize, RandomCrop3D, ToTensor
-from lossFunc import DiceLoss, CELoss
 from metrics import *
-from utils.logger_tools import custom_logger, get_current_date, get_current_time
 from utils.ckpt_tools import load_checkpoint
 from train_init import load_model
 

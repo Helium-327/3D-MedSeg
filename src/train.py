@@ -96,8 +96,9 @@ def train(model, Metrics, train_loader,  val_loader, test_loader, scaler, optimi
 
     writer = SummaryWriter(tb_dir)
     
-    # 添加模型结构到tensorboard
+    # 添加模型结构到tensorboard #TODO: 将模型的torchinfo结构表添加到log文件中，方便推理时排错
     writer.add_graph(model, input_to_model=torch.rand(1, 4, 128, 128, 128).to(DEVICE))
+    model_arch = summary(model, input_size=(1, 4, 128, 128, 128), device=DEVICE)
     print(f'{model_name}模型写入tensorBoard, 使用 {optimizer_name} 优化器, 学习率: {optimizer.param_groups[0]["lr"]}, 损失函数: {loss_func_name}')
     
     for epoch in range(start_epoch, end_epoch):
@@ -270,9 +271,9 @@ def train(model, Metrics, train_loader,  val_loader, test_loader, scaler, optimi
                     removed_ckpt = [ckpt for ckpt in os.listdir(ckpt_dir) if (ckpt.endswith('.pth') and (int(ckpt.split('.')[-2].split('_')[-1]) == int(save_counter - save_max)))] # 获取要删除的文件名
                     os.remove(os.path.join(ckpt_dir, removed_ckpt[0]))
                     print(f"🗑️ Due to reach the max save amount, Removed {removed_ckpt[0]}")
-                    save_checkpoint(model, optimizer, scaler, best_epoch, best_val_loss, best_ckpt_path)
+                    save_checkpoint(model, optimizer, scaler, best_epoch, best_val_loss, best_ckpt_path, model_arch=model_arch)
                 else:
-                    save_checkpoint(model, optimizer, scaler, best_epoch, best_val_loss, best_ckpt_path)
+                    save_checkpoint(model, optimizer, scaler, best_epoch, best_val_loss, best_ckpt_path, model_arch=model_arch)
             else:
                 # 早停策略，如果连续patience个epoch没有改进，则停止训练
                 early_stopping_counter += 1

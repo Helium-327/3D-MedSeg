@@ -280,7 +280,7 @@ if __name__ == '__main__':
     ## 定义全局参数
     parser = argparse.ArgumentParser(description='Train args')
     parser.add_argument('--config', type=str, 
-                        default='/root/autodl-tmp/3D-MedSeg/configs/2_eag_attn_unet.yaml',   #! 每次训练之前检查config文件
+                        default='/root/workspace/BraTS_Solution/configs/本地cfg/1_aaunet.yaml',   #! 每次训练之前检查config文件
                         help='Path to the configuration YAML file')
     parser.add_argument('--resume', type=str, 
                         default=False, 
