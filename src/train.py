@@ -18,7 +18,7 @@ import readline # 解决input()无法使用Backspace的问题, ⚠️不能删�
 from tabulate import tabulate
 from torch.utils.tensorboard import SummaryWriter 
 
-from inference import inference
+from optimized_inference import inference
 from train_and_val import train_one_epoch, val_one_epoch
 
 from utils.ckpt_tools import *
@@ -224,7 +224,8 @@ def train(model, Metrics, train_loader,  val_loader, test_loader, scaler, optimi
                             f"- Scheduler:{scheduler_name}\n"\
                             f"- LossFunc: {loss_func_name}\n"\
                             f"- Lr:       {current_lr:.6f}\n"\
-                            f"- val_cost_time:{val_cost_time:.4f}s ⏱️\n"
+                            f"- val_cost_time:{val_cost_time:.4f}s ⏱️\n"\
+                            f"- early_stopping: {early_stopping_patience}\n"
 
             # 优化点：直接通过映射获取指标名称，避免重复字符串格式化
             def format_value(value, decimals=4):
@@ -274,14 +275,12 @@ def train(model, Metrics, train_loader,  val_loader, test_loader, scaler, optimi
                     save_checkpoint(model, optimizer, scaler, best_epoch, best_val_loss, best_ckpt_path)
             else:
                 # 早停策略，如果连续patience个epoch没有改进，则停止训练
-                if early_stopping_counter == 0 :
-                    continue
-                else:
-                    early_stopping_counter += 1
-                    if early_stopping_counter >= early_stopping_patience:
-                        print(f"🎃 Early stopping at epoch {epoch} due to no improvement in validation loss.")
-                        break
-            
+                early_stopping_counter += 1
+                print(f"😢😢😢Early stopping counter: {early_stopping_counter}/{early_stopping_patience}")
+                if early_stopping_counter >= early_stopping_patience:
+                    print(f"🎃 Early stopping at epoch {epoch} due to no improvement in validation loss.")
+                    break
+        
     print(f"😃😃😃Train finished. Best val loss: 👉{best_val_loss:.4f} at epoch {best_epoch}")
     # 训练完成后关闭 SummaryWriter
     writer.close() 
@@ -306,20 +305,20 @@ def train(model, Metrics, train_loader,  val_loader, test_loader, scaler, optimi
     
     output_path = os.path.join(output_path, model_name, get_current_date()+'_'+get_current_time())
     # 自动推理
-    inference(
-        test_df=test_df,
-        test_loader=test_loader, 
-        output_path=output_path, 
-        model=model,
-        optimizer=optimizer, 
-        Metricer=Metrics,
-        scaler=scaler,
-        ckpt_path=latest_ckpt_path,
-        window_size=(128, 128, 128), 
-        stride_ratio=0.5, 
-        save_flag=True,
-        device=DEVICE
-        )
+
+    attention_unet_scga_config = {
+        'test_df': test_df,
+        'test_loader': test_loader,
+        'output_root': output_path,
+        'model': model,
+        'metricer': Metrics,
+        'scaler': scaler,
+        'optimizer': optimizer,
+        'ckpt_path': final_model_path
+    }
+    
+    inference(**attention_unet_scga_config)
+    
     print(f"🎉🎉🎉推理完成，结果保存在 {output_path}")
     
     
