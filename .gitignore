@@ -3,3 +3,4 @@ checkpoints/
 results/
 outputs/
 output/
+**/__pycache__
