@@ -26,7 +26,7 @@ class EnhancedAttnGate(nn.Module):
         # 空间注意力分支
         self.spatial_att = nn.Sequential(
             nn.Conv3d(F_inter, 1, 3, padding=1), 
-            nn.softmax(dim=2)
+            nn.Softmax(dim=2)
         )
         # 通道注意力分支
         self.channel_att = nn.Sequential(
