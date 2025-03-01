@@ -47,4 +47,4 @@ val_csv_path: "/root/autodl-tmp/3D-MedSeg/data/brats21_original/val.csv"
 test_csv_path: "/root/autodl-tmp/3D-MedSeg/data/brats21_original/test.csv"
 results_dir: "/root/autodl-tmp/3D-MedSeg/results"
 
-commit: "debug"/
+commit: "debug"

@@ -67,9 +67,9 @@ def load_data(test_csv, local_train=True, test_length=10, batch_size=1, num_work
 
 def inference(
     test_df: pd.DataFrame,
-    test_loader: DataLoader,
+    test_loader: torch.utils.data.DataLoader,
     output_root: str,
-    model: Model,
+    model: torch.nn.Module,
     metricer: EvaluationMetrics,
     scaler: torch.cuda.amp.GradScaler,
     optimizer: torch.optim.Optimizer,
@@ -242,8 +242,8 @@ def init_output_dir(output_root: str, model: Model, ckpt_path: str) -> Tuple[str
 
 def async_save_results(
     test_df: pd.DataFrame,
-    pred_vimage: Tensor,
-    vmask: Tensor,
+    pred_vimage: torch.Tensor,
+    vmask: torch.Tensor,
     output_path: str,
     affine: np.ndarray,
     case_id: str

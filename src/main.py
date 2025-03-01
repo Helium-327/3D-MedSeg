@@ -282,22 +282,22 @@ if __name__ == '__main__':
     parser.add_argument('--config', type=str, 
                         default='/root/workspace/BraTS_Solution/configs/本地cfg/1_aaunet.yaml',   #! 每次训练之前检查config文件
                         help='Path to the configuration YAML file')
-    parser.add_argument('--resume', type=str, 
-                        default=False, 
-                        help='Path to the checkpoint to resume training from')
-    parser.add_argument('--resume_tb_path', type=str,
-                        default=False, 
-                        help='Path to the TensorBoard logs to resume from')
-    parser.add_argument('--local', type=str,
-                        default=True, help='training epoch')   
-    parser.add_argument('--epochs', type=str,
-                        default=20, help='training epoch')
-    parser.add_argument('--train_length', type=str,
-                        default=20, help='training epoch')
-    parser.add_argument('--val_length', type=str,
-                        default=4, help='training epoch')
-    parser.add_argument('--early_stop_patience', type=str,
-                        default=1, help='training epoch')
+    # parser.add_argument('--resume', type=str, 
+    #                     default=False, 
+    #                     help='Path to the checkpoint to resume training from')
+    # parser.add_argument('--resume_tb_path', type=str,
+    #                     default=False, 
+    #                     help='Path to the TensorBoard logs to resume from')
+    # parser.add_argument('--local', type=str,
+    #                     default=True, help='training epoch')   
+    # parser.add_argument('--epochs', type=str,
+    #                     default=20, help='training epoch')
+    # parser.add_argument('--train_length', type=str,
+    #                     default=20, help='training epoch')
+    # parser.add_argument('--val_length', type=str,
+    #                     default=4, help='training epoch')
+    # parser.add_argument('--early_stop_patience', type=str,
+    #                     default=1, help='training epoch')
 
     # 解析命令行参数
     global_args = vars(parser.parse_args())  
